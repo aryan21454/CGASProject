@@ -115,11 +115,13 @@ function App() {
       setUploadStatus("Uploading to Cloudinary...");
       const cloudinaryUrl = await uploadToCloudinary();
 
+
       setUploadStatus("Processing data...");
       const response=await axios.post(model_url, { audioUrl: cloudinaryUrl });
 
       setUploadStatus("Data uploaded successfully!");
       const rawData=response.data;
+      
       
       console.log(rawData,'rawData');
       const strucData = {

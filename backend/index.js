@@ -6,18 +6,19 @@ require('dotenv').config()
 const app = express();
 const allowedOrigins = [process.env.FRONTEND_URI, 'https://your-frontend-domain.com'];
 
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true); // Allow the request
-    } else {
-      callback(new Error('Not allowed by CORS')); // Reject the request
-    }
-  },
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', // Allow specific methods
-  credentials: true, // If you need to send cookies or HTTP authentication
-  allowedHeaders: 'Content-Type,Authorization', // Specify allowed headers
-}));
+// app.use(cors({
+//   origin: function (origin, callback) {
+//     if (!origin || allowedOrigins.includes(origin)) {
+//       callback(null, true); // Allow the request
+//     } else {
+//       callback(new Error('Not allowed by CORS')); // Reject the request
+//     }
+//   },
+//   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', // Allow specific methods
+//   credentials: true, // If you need to send cookies or HTTP authentication
+//   allowedHeaders: 'Content-Type,Authorization', // Specify allowed headers
+// }));
+app.use(cors({ origin: 'http://localhost:3000' }));
 app.use(bodyParser.json());
 
 // MongoDB Connection String

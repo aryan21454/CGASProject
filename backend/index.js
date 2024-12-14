@@ -4,7 +4,6 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 require('dotenv').config()
 const app = express();
-const allowedOrigins = [process.env.FRONTEND_URI, 'https://your-frontend-domain.com'];
 
 // app.use(cors({
 //   origin: function (origin, callback) {
@@ -18,7 +17,7 @@ const allowedOrigins = [process.env.FRONTEND_URI, 'https://your-frontend-domain.
 //   credentials: true, // If you need to send cookies or HTTP authentication
 //   allowedHeaders: 'Content-Type,Authorization', // Specify allowed headers
 // }));
-app.use(cors({ origin: 'http://localhost:3000' }));
+app.use(cors({ origin: process.env.FRONTEND_URI }));
 app.use(bodyParser.json());
 
 // MongoDB Connection String

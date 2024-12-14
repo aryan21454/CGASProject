@@ -1,74 +1,121 @@
-import express from 'express';
-import fs from 'fs';
-import path from 'path';
-import ytdl from 'ytdl-core';
-import { fileURLToPath } from 'url'; // Import fileURLToPath
-
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const express = require("express");
+const mongoose = require("mongoose");
+const bodyParser = require("body-parser");
+const cors = require("cors");
 
 const app = express();
-app.use(express.json()); // Middleware to parse JSON request body
+app.use(cors());
+app.use(bodyParser.json());
 
-// Create a downloads directory if it doesn't exist
-const downloadsDir = path.join(__dirname, 'downloads');
-if (!fs.existsSync(downloadsDir)) {
-    fs.mkdirSync(downloadsDir); // Now this should work correctly
-}
+// MongoDB Connection String
+const mongoURI = "mongodb+srv://drashysesodia110053:drewdrashy@e-commerce.uw69y.mongodb.net/?retryWrites=true&w=majority&appName=e-commerce";
 
-// Route to download YouTube video
-app.post('/download', async (req, res) => {
-    const { youtubeUrl } = req.body;
+// Connect to MongoDB
+mongoose
+  .connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log("Connected to MongoDB"))
+  .catch((err) => console.error("MongoDB connection error:", err));
 
-    if (!youtubeUrl) {
-        return res.status(400).json({ error: 'YouTube URL is required.' });
-    }
-
-    try {
-        // Validate the YouTube URL
-        const isValid = ytdl.validateURL(youtubeUrl);
-        if (!isValid) {
-            return res.status(400).json({ error: 'Invalid YouTube URL.' });
-        }
-
-        // Generate unique filename
-        const videoId = ytdl.getVideoID(youtubeUrl);
-        const outputFilePath = path.join(downloadsDir, `video_${videoId}.mp4`);
-        const options = {
-            quality: 'highestvideo',
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-            },
-        };
-        // St ream video and save to file
-        const videoStream = ytdl(youtubeUrl, options);
-        const writeStream = fs.createWriteStream(outputFilePath);
-
-        videoStream.pipe(writeStream);
-
-        // Respond when the video has been fully downloaded
-        writeStream.on('finish', () => {
-            res.status(200).json({
-                message: 'Video downloaded successfully.',
-                filePath: outputFilePath,
-            });
-        });
-
-        // Handle errors
-        videoStream.on('error', (error) => {
-            console.error('Error downloading video:', error);
-            res.status(500).json({ error: 'Failed to download video.' });
-        });
-
-    } catch (error) {
-        console.error('Unexpected error:', error);
-        res.status(500).json({ error: 'An unexpected error occurred.' });
-    }
+// Recipe Schema and Model
+const recipeSchema = new mongoose.Schema({
+  recipe_name: { type: String, required: true },
+  ingredients: [String],
+  preparation_steps: [String],
+  cooking_techniques: [String],
+  equipment_needed: [String],
+  nutritional_information: String,
+  serving_size: String,
+  special_notes: [String],
+  festive_relevance: String,
 });
 
-// Start server
-const PORT = 3000;
+const Recipe = mongoose.model("Recipe", recipeSchema);
+
+// Routes
+
+// Add a Recipe
+app.post("/add-recipe", async (req, res) => {
+  try {
+    const newRecipe = new Recipe(req.body);
+    await newRecipe.save();
+    res.status(201).send("Recipe added successfully!");
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error adding recipe!");
+  }
+});
+
+app.post("/api/recipes/structured", async (req, res) => {
+  try {
+    const newRecipe = new Recipe(req.body); // Assuming req.body contains structured data
+    await newRecipe.save();
+    res.status(201).send("Recipe data uploaded successfully!");
+  } catch (error) {
+    console.error("Error saving structured data:", error);
+    res.status(500).send("Failed to upload recipe data.");
+  }
+});
+
+
+// Get All Recipes
+app.get("/recipes", async (req, res) => {
+  try {
+    const recipes = await Recipe.find();
+    res.status(200).json(recipes);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error fetching recipes!");
+  }
+});
+
+// Get a Single Recipe by ID
+app.get("/recipe/:id", async (req, res) => {
+  try {
+    const recipe = await Recipe.findById(req.params.id);
+    if (!recipe) {
+      return res.status(404).send("Recipe not found!");
+    }
+    res.status(200).json(recipe);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error fetching recipe!");
+  }
+});
+
+// Update a Recipe by ID
+app.put("/recipe/:id", async (req, res) => {
+  try {
+    const updatedRecipe = await Recipe.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+    if (!updatedRecipe) {
+      return res.status(404).send("Recipe not found!");
+    }
+    res.status(200).send("Recipe updated successfully!");
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error updating recipe!");
+  }
+});
+
+// Delete a Recipe by ID
+app.delete("/recipe/:id", async (req, res) => {
+  try {
+    const deletedRecipe = await Recipe.findByIdAndDelete(req.params.id);
+    if (!deletedRecipe) {
+      return res.status(404).send("Recipe not found!");
+    }
+    res.status(200).send("Recipe deleted successfully!");
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error deleting recipe!");
+  }
+});
+
+// Start Server
+const PORT = 5000;
 app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`);
 });

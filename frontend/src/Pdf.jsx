@@ -2,65 +2,72 @@ import React from 'react';
 import { jsPDF } from 'jspdf';
 
 const Pdf = ({ structuredData }) => {
+  // console.log(structuredData)
   const handleDownloadPDF = () => {
-    const doc = new jsPDF();
-    let yPosition = 10; // Start position for the first line of text
-
-    // Add a title
-    doc.setFontSize(16);
-    doc.text('Recipe Information', 10, yPosition);
-    yPosition += 10;
-
-    // Add Recipe Details
-    doc.setFontSize(12);
-    doc.text(`Recipe Name: ${structuredData.recipe_name || 'N/A'}`, 10, yPosition);
-    yPosition += 8;
-
-    doc.text('Ingredients:', 10, yPosition);
-    yPosition += 8;
-    structuredData.ingredients.forEach((ingredient) => {
-      doc.text(`- ${ingredient}`, 15, yPosition);
-      yPosition += 8;
-    });
-
-    doc.text('Preparation Steps:', 10, yPosition);
-    yPosition += 8;
-    structuredData.preparation_steps.forEach((step, index) => {
-      doc.text(`${step}`, 15, yPosition);
-      yPosition += 8;
-    });
-
-    doc.text('Cooking Techniques:', 10, yPosition);
-    yPosition += 8;
-    structuredData.cooking_techniques.forEach((technique) => {
-      doc.text(`- ${technique}`, 15, yPosition);
-      yPosition += 8;
-    });
-
-    doc.text('Equipment Needed:', 10, yPosition);
-    yPosition += 8;
-    structuredData.equipment_needed.forEach((equipment) => {
-      doc.text(`- ${equipment}`, 15, yPosition);
-      yPosition += 8;
-    });
-
-    doc.text(`Nutritional Information: ${structuredData.nutritional_information || 'N/A'}`, 10, yPosition);
-    yPosition += 8;
-
-    doc.text(`Serving Size: ${structuredData.serving_size || 'N/A'}`, 10, yPosition);
-    yPosition += 8;
-
-    doc.text('Special Notes:', 10, yPosition);
-    yPosition += 8;
-    structuredData.special_notes.forEach((note) => {
-      doc.text(`- ${note}`, 15, yPosition);
-      yPosition += 8;
-    });
-
-    doc.text(`Festive Relevance: ${structuredData.festive_relevance || 'N/A'}`, 10, yPosition);
-
-    // Save the PDF
-    doc.save(`${structuredData.recipe_name || 'recipe'}.pdf`);
+    
+   try {
+     const doc = new jsPDF();
+     const pageHeight = doc.internal.pageSize.height; // Page height
+     let yPosition = 10; // Start position for the first line of text
+ 
+     const addText = (text, x, y, wrapWidth = 180) => {
+       const lines = doc.splitTextToSize(text, wrapWidth); // Split long text into multiple lines
+       lines.forEach((line) => {
+         if (y > pageHeight - 10) { // Check if the current yPosition exceeds the page height
+           doc.addPage();
+           y = 10; // Reset yPosition for the new page
+         }
+         doc.text(line, x, y);
+         y += 8; // Increment yPosition for the next line
+       });
+       return y;
+     };
+ 
+     // Add a title
+     doc.setFontSize(16);
+     yPosition = addText('Recipe Information', 10, yPosition);
+ 
+     // Add Recipe Details
+     doc.setFontSize(12);
+     yPosition = addText(`Recipe Name: ${structuredData.recipe_name || 'N/A'}`, 10, yPosition);
+ 
+     yPosition = addText('Ingredients:', 10, yPosition);
+     structuredData.ingredients.forEach((ingredient) => {
+       yPosition = addText(`- ${ingredient}`, 15, yPosition);
+     });
+ 
+     yPosition = addText('Preparation Steps:', 10, yPosition);
+     structuredData.preparation_steps.forEach((step, index) => {
+       yPosition = addText(`${step}`, 15, yPosition); // Use indexing for numbered steps
+     });
+ 
+     yPosition = addText('Cooking Techniques:', 10, yPosition);
+     structuredData.cooking_techniques.forEach((technique) => {
+       yPosition = addText(`- ${technique}`, 15, yPosition);
+     });
+ 
+     yPosition = addText('Equipment Needed:', 10, yPosition);
+     structuredData.equipment_needed.forEach((equipment) => {
+       yPosition = addText(`- ${equipment}`, 15, yPosition);
+     });
+ 
+     yPosition = addText(`Nutritional Information: ${structuredData.nutritional_information || 'N/A'}`, 10, yPosition);
+ 
+     yPosition = addText(`Serving Size: ${structuredData.serving_size || 'N/A'}`, 10, yPosition);
+ 
+     yPosition = addText('Special Notes:', 10, yPosition);
+     structuredData.special_notes.forEach((note) => {
+       yPosition = addText(`- ${note}`, 15, yPosition);
+     });
+ 
+     yPosition = addText(`Festive Relevance: ${structuredData.festive_relevance || 'N/A'}`, 10, yPosition);
+ 
+     // Save the PDF
+     doc.save(`${structuredData.recipe_name || 'recipe'}.pdf`);
+   } catch (error) {
+    alert("Upload a pdf file")
+    
+   }
   };
 
   return (

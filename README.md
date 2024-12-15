@@ -1,6 +1,3 @@
-Here’s a **README.md** template for your project:
-
----
 
 # Recipe Preview and PDF Downloader
 
